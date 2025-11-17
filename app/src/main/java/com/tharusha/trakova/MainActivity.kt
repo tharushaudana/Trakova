@@ -102,7 +102,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    // Load numbers from SharedPreferences
     private fun loadNumbers() {
         val prefs = getSharedPreferences(AppConfig.PREF_NAME, Context.MODE_PRIVATE)
         val stored = prefs.getStringSet(AppConfig.KEY_NUMBERS, emptySet()) ?: emptySet()
@@ -110,7 +109,6 @@ class MainActivity : AppCompatActivity() {
         numbersList.addAll(stored)
     }
 
-    // Save numbers to SharedPreferences
     private fun saveNumbers() {
         val prefs = getSharedPreferences(AppConfig.PREF_NAME, Context.MODE_PRIVATE)
         prefs.edit().putStringSet(AppConfig.KEY_NUMBERS, numbersList.toSet()).apply()

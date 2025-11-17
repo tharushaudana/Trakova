@@ -3,6 +3,7 @@ package com.tharusha.trakova
 import android.app.*
 import android.content.Context
 import android.content.Intent
+import android.os.BatteryManager
 import android.os.Build
 import android.os.IBinder
 import android.telephony.SmsManager
@@ -12,7 +13,6 @@ import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 
 class SmsListenerService : Service() {
-
     private val CHANNEL_ID = "trakova_channel_01"
     private lateinit var fusedLocationClient: FusedLocationProviderClient
 
@@ -74,7 +74,7 @@ class SmsListenerService : Service() {
         fusedLocationClient.lastLocation
             .addOnSuccessListener { location ->
                 val reply = if (location != null) {
-                    "Current location: https://maps.google.com/?q=${location.latitude},${location.longitude}"
+                    "Location: https://maps.google.com/?q=${location.latitude},${location.longitude}"
                 } else {
                     "Location unavailable"
                 }
@@ -87,6 +87,10 @@ class SmsListenerService : Service() {
     }
 
     private fun sendSms(phoneNumber: String, message: String) {
+        // Combine sending SMS with battery level info
+        val batteryLevel = getBatteryLevel()
+        val fullMessage = "$message\nBattery: $batteryLevel%"
+
         try {
             val smsManager: SmsManager = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                 // For API 31 (Android 12) and above
@@ -97,13 +101,18 @@ class SmsListenerService : Service() {
                 SmsManager.getDefault()
             }
 
-            smsManager.sendTextMessage(phoneNumber, null, message, null, null)
+            smsManager.sendTextMessage(phoneNumber, null, fullMessage, null, null)
             println("✅ SMS sent to $phoneNumber" )
 
         } catch (e: Exception) {
             println("⚠️ Failed to send SMS to $phoneNumber: ${e.message}")
             e.printStackTrace()
         }
+    }
+
+    private fun getBatteryLevel(): Int {
+        val bm = getSystemService(BATTERY_SERVICE) as BatteryManager
+        return bm.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY)
     }
 
     private fun loadNumbers() {
