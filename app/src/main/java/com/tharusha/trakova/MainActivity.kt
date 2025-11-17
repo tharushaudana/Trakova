@@ -1,26 +1,32 @@
 package com.tharusha.trakova
 
 import android.Manifest
-import android.app.ActivityManager
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
-import android.provider.Settings
-import android.widget.Button
-import android.widget.Toast
+import android.widget.*
+import android.widget.ArrayAdapter
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
 
 class MainActivity : AppCompatActivity() {
+
     private lateinit var btnToggleService: Button
+    private lateinit var btnAddNumber: Button
+    private lateinit var txtPhoneNumber: EditText
+    private lateinit var listNumbers: ListView
+
     private var serviceRunning = false
+    private lateinit var adapter: ArrayAdapter<String>
+    private val numbersList = ArrayList<String>()
+
+    private val PREF_NAME = "trakova_prefs"
+    private val KEY_NUMBERS = "authorized_numbers"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -29,12 +35,25 @@ class MainActivity : AppCompatActivity() {
 
         requestPermissions()
 
-        serviceRunning = SmsListenerService.isRunning;
-
+        // UI References
         btnToggleService = findViewById(R.id.btnToggleService)
+        btnAddNumber = findViewById(R.id.btnAddNumber)
+        txtPhoneNumber = findViewById(R.id.txtPhoneNumber)
+        listNumbers = findViewById(R.id.listNumbers)
+
+        // Load stored numbers
+        loadNumbers()
+
+        // List Adapter
+        adapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, numbersList)
+        listNumbers.adapter = adapter
+
+        // Detect if service running
+        serviceRunning = SmsListenerService.isRunning
 
         updateToggleServiceButton()
 
+        // Toggle Button Click
         btnToggleService.setOnClickListener {
             if (!notificationsEnabled()) {
                 Toast.makeText(this, "Please enable notifications to run the service", Toast.LENGTH_LONG).show()
@@ -48,21 +67,60 @@ class MainActivity : AppCompatActivity() {
                 val intent = Intent(this, SmsListenerService::class.java)
                 ContextCompat.startForegroundService(this, intent)
             }
-            serviceRunning = !serviceRunning
 
+            serviceRunning = !serviceRunning
             updateToggleServiceButton()
         }
 
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
-            insets
+        // Add Number Button
+        btnAddNumber.setOnClickListener {
+            val number = txtPhoneNumber.text.toString().trim()
+
+            if (number.isEmpty()) {
+                Toast.makeText(this, "Enter a valid number", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
+            if (!numbersList.contains(number)) {
+                numbersList.add(number)
+                saveNumbers()
+                adapter.notifyDataSetChanged()
+                txtPhoneNumber.text.clear()
+            } else {
+                Toast.makeText(this, "Number already added", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        // Long press → remove number
+        listNumbers.setOnItemLongClickListener { _, _, position, _ ->
+            val num = numbersList[position]
+
+            Toast.makeText(this, "Removed: $num", Toast.LENGTH_SHORT).show()
+
+            numbersList.removeAt(position)
+            saveNumbers()
+            adapter.notifyDataSetChanged()
+
+            true
         }
     }
 
+    // Load numbers from SharedPreferences
+    private fun loadNumbers() {
+        val prefs = getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+        val stored = prefs.getStringSet(KEY_NUMBERS, emptySet()) ?: emptySet()
+        numbersList.clear()
+        numbersList.addAll(stored)
+    }
+
+    // Save numbers to SharedPreferences
+    private fun saveNumbers() {
+        val prefs = getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+        prefs.edit().putStringSet(KEY_NUMBERS, numbersList.toSet()).apply()
+    }
+
     private fun notificationsEnabled(): Boolean {
-        val mgr = NotificationManagerCompat.from(this)
-        return mgr.areNotificationsEnabled()
+        return NotificationManagerCompat.from(this).areNotificationsEnabled()
     }
 
     private fun requestEnableNotifications() {
@@ -94,11 +152,14 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    // Changes button color + text according to service state
     private fun updateToggleServiceButton() {
         if (serviceRunning) {
             btnToggleService.text = "Disable Service"
+            btnToggleService.setBackgroundResource(R.drawable.rounded_toggle_button_enabled)
         } else {
             btnToggleService.text = "Enable Service"
+            btnToggleService.setBackgroundResource(R.drawable.rounded_toggle_button_disabled)
         }
     }
 }

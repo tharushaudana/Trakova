@@ -15,11 +15,16 @@ class SmsListenerService : Service() {
 
     private val CHANNEL_ID = "trakova_channel_01"
 
+    private val PREF_NAME = "trakova_prefs"
+    private val KEY_NUMBERS = "authorized_numbers"
+
     private lateinit var fusedLocationClient: FusedLocationProviderClient
 
     companion object {
         var isRunning = false
     }
+
+    private val numbersList = ArrayList<String>()
 
     override fun onCreate() {
         super.onCreate()
@@ -37,11 +42,17 @@ class SmsListenerService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-
         val sender = intent?.getStringExtra("sender")
         val msg = intent?.getStringExtra("msg")
 
         if (sender != null && msg != null) {
+            loadNumbers()
+
+            if (!numbersList.contains(sender)) {
+                println("⚠️ Unauthorized number: $sender")
+                return START_STICKY
+            }
+
             handleIncomingMessage(sender, msg)
         }
 
@@ -79,7 +90,7 @@ class SmsListenerService : Service() {
             }
     }
 
-    fun sendSms(phoneNumber: String, message: String) {
+    private fun sendSms(phoneNumber: String, message: String) {
         try {
             val smsManager: SmsManager = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                 // For API 31 (Android 12) and above
@@ -97,6 +108,13 @@ class SmsListenerService : Service() {
             println("⚠️ Failed to send SMS to $phoneNumber: ${e.message}")
             e.printStackTrace()
         }
+    }
+
+    private fun loadNumbers() {
+        val prefs = getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+        val stored = prefs.getStringSet(KEY_NUMBERS, emptySet()) ?: emptySet()
+        numbersList.clear()
+        numbersList.addAll(stored)
     }
 
     private fun createNotification(): Notification {

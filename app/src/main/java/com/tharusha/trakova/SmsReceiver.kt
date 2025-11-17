@@ -19,21 +19,16 @@ class SmsReceiver : BroadcastReceiver() {
                 val sender = sms.originatingAddress
                 val message = sms.messageBody
 
-                println("JJJJJJJJJJJJJJJJJJ: $sender")
-
                 if (!SmsListenerService.isRunning) {
                     println("SmsListenerService is not running. Ignoring SMS.")
                     return
                 }
 
-                // Filter: Only specific number
-                if (sender == "+94773531478") {
-                    // Forward to foreground service
-                    val serviceIntent = Intent(context, SmsListenerService::class.java)
-                    serviceIntent.putExtra("sender", sender)
-                    serviceIntent.putExtra("msg", message)
-                    context.startService(serviceIntent)
-                }
+                // Forward to foreground service
+                val serviceIntent = Intent(context, SmsListenerService::class.java)
+                serviceIntent.putExtra("sender", sender)
+                serviceIntent.putExtra("msg", message)
+                context.startService(serviceIntent)
             }
         }
     }

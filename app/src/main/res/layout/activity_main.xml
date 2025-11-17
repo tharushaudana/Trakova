@@ -1,17 +1,90 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:gravity="center"
     android:orientation="vertical"
-    android:padding="20dp">
+    android:padding="25dp"
+    android:background="@android:color/white">
 
+    <!-- App Title -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Trakova"
+        android:textSize="28sp"
+        android:textStyle="bold"
+        android:textColor="#1A237E"
+        android:gravity="center"
+        android:paddingBottom="20dp" />
+
+    <!-- Description -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Offline Safe Tracking Assistant"
+        android:textSize="14sp"
+        android:textColor="#555555"
+        android:gravity="center"
+        android:paddingBottom="30dp" />
+
+    <!-- Input Box (Styled) -->
+    <EditText
+        android:id="@+id/txtPhoneNumber"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:hint="Enter phone number"
+        android:padding="12dp"
+        android:textSize="16sp"
+        android:background="@drawable/rounded_edittext"
+        android:inputType="phone"
+        android:textColor="#000000"
+        android:textColorHint="#888888"
+        android:layout_marginBottom="12dp" />
+
+    <!-- Add Button -->
+    <Button
+        android:id="@+id/btnAddNumber"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:text="Add Number"
+        android:textSize="16sp"
+        android:background="@drawable/rounded_button"
+        android:textColor="#FFFFFF"
+        android:layout_marginBottom="25dp" />
+
+    <!-- Label above list -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Authorized Numbers"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:textColor="#333333"
+        android:paddingBottom="8dp" />
+
+    <!-- ListView for numbers -->
+    <ListView
+        android:id="@+id/listNumbers"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:divider="#DDDDDD"
+        android:dividerHeight="1dp"
+        android:background="#FAFAFA"
+        android:padding="5dp" />
+
+    <!-- Toggle Service Button -->
     <Button
         android:id="@+id/btnToggleService"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
         android:text="Enable Service"
-        android:padding="20dp" />
+        android:textSize="16sp"
+        android:background="@drawable/rounded_toggle_button_disabled"
+        app:backgroundTint="@null"
+        android:textColor="#FFFFFF"
+        android:layout_marginTop="20dp" />
 
 </LinearLayout>
