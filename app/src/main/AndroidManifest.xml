@@ -44,7 +44,8 @@
             android:foregroundServiceType="dataSync|location" />
 
         <!-- SMS Receiver -->
-        <receiver android:name=".SmsReceiver" android:exported="true">
+        <receiver android:name=".SmsReceiver" android:exported="true"
+            android:permission="android.permission.BROADCAST_SMS">
             <intent-filter>
                 <action android:name="android.provider.Telephony.SMS_RECEIVED"/>
             </intent-filter>

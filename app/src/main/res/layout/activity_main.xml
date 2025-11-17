@@ -86,5 +86,4 @@
         app:backgroundTint="@null"
         android:textColor="#FFFFFF"
         android:layout_marginTop="20dp" />
-
 </LinearLayout>

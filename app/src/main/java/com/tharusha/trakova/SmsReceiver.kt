@@ -7,7 +7,6 @@ import android.os.Bundle
 import android.telephony.SmsMessage
 
 class SmsReceiver : BroadcastReceiver() {
-
     override fun onReceive(context: Context, intent: Intent) {
         val bundle: Bundle? = intent.extras
         if (bundle != null) {

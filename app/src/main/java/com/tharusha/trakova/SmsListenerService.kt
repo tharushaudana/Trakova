@@ -14,10 +14,6 @@ import com.google.android.gms.location.LocationServices
 class SmsListenerService : Service() {
 
     private val CHANNEL_ID = "trakova_channel_01"
-
-    private val PREF_NAME = "trakova_prefs"
-    private val KEY_NUMBERS = "authorized_numbers"
-
     private lateinit var fusedLocationClient: FusedLocationProviderClient
 
     companion object {
@@ -111,8 +107,8 @@ class SmsListenerService : Service() {
     }
 
     private fun loadNumbers() {
-        val prefs = getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
-        val stored = prefs.getStringSet(KEY_NUMBERS, emptySet()) ?: emptySet()
+        val prefs = getSharedPreferences(AppConfig.PREF_NAME, Context.MODE_PRIVATE)
+        val stored = prefs.getStringSet(AppConfig.KEY_NUMBERS, emptySet()) ?: emptySet()
         numbersList.clear()
         numbersList.addAll(stored)
     }

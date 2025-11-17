@@ -25,9 +25,6 @@ class MainActivity : AppCompatActivity() {
     private lateinit var adapter: ArrayAdapter<String>
     private val numbersList = ArrayList<String>()
 
-    private val PREF_NAME = "trakova_prefs"
-    private val KEY_NUMBERS = "authorized_numbers"
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -107,16 +104,16 @@ class MainActivity : AppCompatActivity() {
 
     // Load numbers from SharedPreferences
     private fun loadNumbers() {
-        val prefs = getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
-        val stored = prefs.getStringSet(KEY_NUMBERS, emptySet()) ?: emptySet()
+        val prefs = getSharedPreferences(AppConfig.PREF_NAME, Context.MODE_PRIVATE)
+        val stored = prefs.getStringSet(AppConfig.KEY_NUMBERS, emptySet()) ?: emptySet()
         numbersList.clear()
         numbersList.addAll(stored)
     }
 
     // Save numbers to SharedPreferences
     private fun saveNumbers() {
-        val prefs = getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
-        prefs.edit().putStringSet(KEY_NUMBERS, numbersList.toSet()).apply()
+        val prefs = getSharedPreferences(AppConfig.PREF_NAME, Context.MODE_PRIVATE)
+        prefs.edit().putStringSet(AppConfig.KEY_NUMBERS, numbersList.toSet()).apply()
     }
 
     private fun notificationsEnabled(): Boolean {
@@ -152,7 +149,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    // Changes button color + text according to service state
     private fun updateToggleServiceButton() {
         if (serviceRunning) {
             btnToggleService.text = "Disable Service"
