@@ -3,6 +3,7 @@ package com.tharusha.trakova
 import android.app.*
 import android.content.Context
 import android.content.Intent
+import android.media.AudioManager
 import android.os.BatteryManager
 import android.os.Build
 import android.os.IBinder
@@ -10,11 +11,14 @@ import android.telephony.SmsManager
 import android.telephony.SubscriptionManager
 import androidx.core.app.NotificationCompat
 import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationCallback
+import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.Priority
 
 class SmsListenerService : Service() {
     private val CHANNEL_ID = "trakova_channel_01"
-    private lateinit var fusedLocationClient: FusedLocationProviderClient
+//    private lateinit var fusedLocationClient: FusedLocationProviderClient
 
     companion object {
         var isRunning = false
@@ -26,7 +30,7 @@ class SmsListenerService : Service() {
         super.onCreate()
         createNotificationChannel()
         startForeground(1, createNotification())
-        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+//        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
         isRunning = true
         println("🔹 SmsListenerService started and running in foreground")
     }
@@ -61,8 +65,33 @@ class SmsListenerService : Service() {
         }
     }
 
+//    private fun sendCurrentLocation(phoneNumber: String) {
+//        // Check location permission before requesting
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M &&
+//            checkSelfPermission(android.Manifest.permission.ACCESS_FINE_LOCATION) !=
+//            android.content.pm.PackageManager.PERMISSION_GRANTED
+//        ) {
+//            sendSms(phoneNumber, "Location permission denied!")
+//            return
+//        }
+//
+//        fusedLocationClient.lastLocation
+//            .addOnSuccessListener { location ->
+//                val reply = if (location != null) {
+//                    "Location: https://maps.google.com/?q=${location.latitude},${location.longitude}"
+//                } else {
+//                    "Location unavailable"
+//                }
+//
+//                sendSms(phoneNumber, reply)
+//            }
+//            .addOnFailureListener {
+//                sendSms(phoneNumber, "Failed to get location")
+//            }
+//    }
+
     private fun sendCurrentLocation(phoneNumber: String) {
-        // Check location permission before requesting
+        // Permission check
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M &&
             checkSelfPermission(android.Manifest.permission.ACCESS_FINE_LOCATION) !=
             android.content.pm.PackageManager.PERMISSION_GRANTED
@@ -71,25 +100,37 @@ class SmsListenerService : Service() {
             return
         }
 
-        fusedLocationClient.lastLocation
-            .addOnSuccessListener { location ->
+        val locationRequest = com.google.android.gms.location.LocationRequest.Builder(
+            Priority.PRIORITY_HIGH_ACCURACY, 1000L
+        ).setMaxUpdates(1) // get only 1 fresh reading
+            .build()
+
+        val fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+
+        val callback = object : LocationCallback() {
+            override fun onLocationResult(result: LocationResult) {
+                fusedLocationClient.removeLocationUpdates(this)
+
+                val location = result.lastLocation
                 val reply = if (location != null) {
-                    "Location: https://maps.google.com/?q=${location.latitude},${location.longitude}"
+                    "Loc: https://maps.google.com/?q=${location.latitude},${location.longitude}"
                 } else {
                     "Location unavailable"
                 }
 
                 sendSms(phoneNumber, reply)
             }
-            .addOnFailureListener {
-                sendSms(phoneNumber, "Failed to get location")
-            }
+        }
+
+        fusedLocationClient.requestLocationUpdates(locationRequest, callback, mainLooper)
     }
+
 
     private fun sendSms(phoneNumber: String, message: String) {
         // Combine sending SMS with battery level info
         val batteryLevel = getBatteryLevel()
-        val fullMessage = "$message\nBattery: $batteryLevel%"
+        val ringerMode = getRingerMode()
+        val fullMessage = "$message\nBat: $batteryLevel%\nRin: ${ringerMode.first()}"
 
         try {
             val smsManager: SmsManager = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
@@ -113,6 +154,16 @@ class SmsListenerService : Service() {
     private fun getBatteryLevel(): Int {
         val bm = getSystemService(BATTERY_SERVICE) as BatteryManager
         return bm.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY)
+    }
+
+    private fun getRingerMode(): String {
+        val audioManager = getSystemService(AUDIO_SERVICE) as AudioManager
+        return when (audioManager.ringerMode) {
+            AudioManager.RINGER_MODE_SILENT -> "Silent"
+            AudioManager.RINGER_MODE_VIBRATE -> "Vibrate"
+            AudioManager.RINGER_MODE_NORMAL -> "Normal"
+            else -> "Unknown"
+        }
     }
 
     private fun loadNumbers() {
